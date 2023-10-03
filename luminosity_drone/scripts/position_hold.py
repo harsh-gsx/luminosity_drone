@@ -42,7 +42,7 @@ class swift():
 		# [x_setpoint, y_setpoint, z_setpoint]
 		self.setpoint = [2,2,20] # whycon marker at the position of the dummy given in the scene. Make the whycon marker associated with position_to_hold dummy renderable and make changes accordingly
 
-
+		self.const = 0
 		#Declaring a cmd of message type swift_msgs and initializing values
 		self.cmd = swift_msgs()
 		self.cmd.rcRoll = 1500
@@ -94,6 +94,7 @@ class swift():
 		self.command_pub = rospy.Publisher('/drone_command', swift_msgs, queue_size=1)
 		#------------------------Add other ROS Publishers here-----------------------------------------------------
 		self.alt_error_pub = rospy.Publisher('/alt_error', Float64, queue_size=1)
+		self.const_error_pub = rospy.Publisher('/const_error',Int64)
 
 
 
@@ -130,7 +131,6 @@ class swift():
 		self.cmd.rcRoll = 1500
 		self.cmd.rcYaw = 1500
 		self.cmd.rcPitch = 1500
-		self.cmd.
 		
 		
 		
@@ -202,17 +202,16 @@ class swift():
 		self.alt_error = -(self.setpoint[2] - self.drone_position[2]) #error for z
 
 
-		self.cmd.rcThrottle = int(1590 + self.alt_error * self.Kp[2] + (self.alt_error - self.prev_alt_error)*self.Kd[2] + self.sum_alt_error* self.Ki[2])
+		self.cmd.rcThrottle = int(1500 + self.alt_error * self.Kp[2] + (self.alt_error - self.prev_alt_error)*self.Kd[2] + self.sum_alt_error* self.Ki[2])
 
-		if self.cmd.rcThrottle < 1000 :	 
+		if self.cmd.rcThrottle < 1000:	 
 			self.cmd.rcThrottle = 1000
-
-
-		if self.cmd.rcThrottle > 2000 :
-		 	self.cmd.rcThrottle = 2000
+		if self.cmd.rcThrottle > 2000:
+			self.cmd.rcThrottle = 2000
         
 		
 		self.prev_alt_error = self.alt_error
+
 
 		self.sum_alt_error = self.sum_alt_error + self.alt_error
 
@@ -221,14 +220,15 @@ class swift():
 
 
 
-
+		
 
 
 
 
 	#------------------------------------------------------------------------------------------------------------------------
 		self.command_pub.publish(self.cmd)
-		
+		self.alt_error_pub.publish(self.alt_error)
+		self.const_error_pub.publish(self.const)
 
 
 
